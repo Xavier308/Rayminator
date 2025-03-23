@@ -1,89 +1,7 @@
-// src/components/laser-effects.jsx
+// src/components/BugExplosion.jsx
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-
-// Componente de rayo láser simplificado y altamente visible
-export function EnhancedLaserBeam({ start, end, active, color = '#ff0000' }) {
-  const laserRef = useRef();
-  const glowRef = useRef();
-  
-  // Actualizar posición y efectos del láser
-  useFrame(() => {
-    if (!active || !laserRef.current) return;
-    
-    // Convertir a Vector3 si son arrays
-    const startVec = start instanceof THREE.Vector3 ? start : new THREE.Vector3(...start);
-    const endVec = end instanceof THREE.Vector3 ? end : new THREE.Vector3(...end);
-    
-    // Vector dirección
-    const direction = new THREE.Vector3().subVectors(endVec, startVec).normalize();
-    
-    // Distancia
-    const distance = startVec.distanceTo(endVec);
-    
-    // Punto medio para posicionar el cilindro del láser
-    const midpoint = new THREE.Vector3().addVectors(
-      startVec,
-      direction.clone().multiplyScalar(distance / 2)
-    );
-    
-    // Actualizar posición y rotación del láser
-    laserRef.current.position.copy(midpoint);
-    laserRef.current.lookAt(endVec);
-    laserRef.current.scale.set(0.1, 0.1, distance); // Laser más grueso
-    
-    // Actualizar el efecto de brillo
-    if (glowRef.current) {
-      glowRef.current.position.copy(midpoint);
-      glowRef.current.lookAt(endVec);
-      glowRef.current.scale.set(0.2, 0.2, distance);
-    }
-  });
-
-  // No renderizar nada si no está activo
-  if (!active) return null;
-  
-  return (
-    <group>
-      {/* Rayo láser principal - MÁS VISIBLE */}
-      <mesh ref={laserRef}>
-        <cylinderGeometry args={[1, 1, 1, 8, 1]} />
-        <meshBasicMaterial 
-          color={color} 
-          transparent={false} // Sin transparencia para mayor visibilidad
-        />
-      </mesh>
-      
-      {/* Efecto de brillo alrededor del láser */}
-      <mesh ref={glowRef}>
-        <cylinderGeometry args={[1, 1, 1, 12, 1]} />
-        <meshBasicMaterial 
-          color={color} 
-          transparent 
-          opacity={0.5} 
-          blending={THREE.AdditiveBlending} 
-        />
-      </mesh>
-      
-      {/* Destello en el punto de impacto */}
-      <pointLight 
-        position={end instanceof THREE.Vector3 ? [end.x, end.y, end.z] : end} 
-        intensity={5} 
-        distance={4} 
-        color={color} 
-      />
-      
-      {/* Luz adicional en el inicio */}
-      <pointLight 
-        position={start instanceof THREE.Vector3 ? [start.x, start.y, start.z] : start} 
-        intensity={2} 
-        distance={2} 
-        color={color} 
-      />
-    </group>
-  );
-}
 
 // Componente para la explosión cuando un bug es eliminado
 export function BugExplosion({ position, onComplete }) {
@@ -173,4 +91,4 @@ export function BugExplosion({ position, onComplete }) {
   );
 }
 
-export default { EnhancedLaserBeam, BugExplosion };
+export default BugExplosion;

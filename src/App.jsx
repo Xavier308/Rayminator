@@ -36,7 +36,11 @@ function App() {
             />
           </Suspense>
         </Canvas>
-      </div>
+        </div>
+        <div className="laser-overlay">
+          <div id="laser-beam" className="laser-beam"></div>
+          <div id="laser-impact" className="laser-impact"></div>
+        </div>
     </div>
   )
 }

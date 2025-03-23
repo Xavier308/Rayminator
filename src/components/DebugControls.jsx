@@ -1,5 +1,6 @@
 // src/components/DebugControls.jsx
 // Crea este archivo nuevo para ayudar a posicionar todo correctamente
+// This file is not implemented at the moment.
 
 import React, { useState } from 'react';
 import { useControls } from 'leva';

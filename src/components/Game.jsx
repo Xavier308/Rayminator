@@ -1,8 +1,9 @@
-// src/components/Game.jsx - Implementación completa con modelo Purple_Beetle
+// src/components/Game.jsx - Versión final sin piso y con láser ultra visible
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import { updateCssLaser } from '../utils/laserUtils';
+
 import { 
-  OrbitControls, 
   useGLTF, 
   Environment, 
   PerspectiveCamera,
@@ -10,7 +11,7 @@ import {
   Float
 } from '@react-three/drei';
 import * as THREE from 'three';
-import { EnhancedLaserBeam, BugExplosion } from './laser-effects';
+import { BugExplosion } from './laser-effects';
 
 // Importar modelos 3D
 import robotModelUrl from '/models/rayminator.glb';
@@ -43,7 +44,6 @@ function Bug({ position, onHit, id }) {
       clonedModel.scale.set(0.33, 0.33, 0.33);
       
       // Rotar para que mire hacia la cámara
-      //clonedModel.rotation.y = Math.PI;
       clonedModel.rotation.y = 0
       
       // Agregar modelo al grupo
@@ -134,107 +134,175 @@ function Bug({ position, onHit, id }) {
   );
 }
 
-// Robot con rotación 3D
+// Componente para láser extremadamente simple pero visible
+function UltraVisibleLaser({ start, end, active }) {
+  if (!active) return null;
+  
+  // Asegurar que sean Vector3
+  const startVec = start instanceof THREE.Vector3 ? start : new THREE.Vector3(...start);
+  const endVec = end instanceof THREE.Vector3 ? end : new THREE.Vector3(...end);
+  
+  // Dirección y distancia
+  const direction = new THREE.Vector3().subVectors(endVec, startVec).normalize();
+  const distance = startVec.distanceTo(endVec);
+  
+  // Crear un material sólido
+  const laserMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0xff0000, 
+    transparent: false
+  });
+  
+  return (
+    <group>
+      {/* Láser como una línea directa */}
+      <line>
+        <bufferGeometry attach="geometry">
+          <bufferAttribute
+            attachObject={['attributes', 'position']}
+            count={2}
+            array={new Float32Array([
+              startVec.x, startVec.y, startVec.z,
+              endVec.x, endVec.y, endVec.z
+            ])}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial attach="material" color="#ff0000" linewidth={10} />
+      </line>
+      
+      {/* Cilindro sólido como refuerzo */}
+      <mesh position={[(startVec.x + endVec.x) / 2, (startVec.y + endVec.y) / 2, (startVec.z + endVec.z) / 2]}>
+        <cylinderGeometry 
+          args={[0.1, 0.1, distance, 8]} 
+          rotation={[Math.PI / 2, 0, 0]}
+        />
+        <meshBasicMaterial color="#ff0000" />
+      </mesh>
+      
+      {/* Punto de origen */}
+      <mesh position={[startVec.x, startVec.y, startVec.z]}>
+        <sphereGeometry args={[0.15, 8, 8]} />
+        <meshBasicMaterial color="#ffff00" />
+      </mesh>
+      
+      {/* Punto de destino */}
+      <mesh position={[endVec.x, endVec.y, endVec.z]}>
+        <sphereGeometry args={[0.15, 8, 8]} />
+        <meshBasicMaterial color="#ff0000" />
+      </mesh>
+    </group>
+  );
+}
+
+// Componente Robot completo con láser CSS
 function Robot({ onShoot }) {
-  const ref = useRef();
+  const robotRef = useRef();
   const { camera, pointer, viewport } = useThree();
   const [shooting, setShooting] = useState(false);
-  const [targetPoint, setTargetPoint] = useState(new THREE.Vector3());
-  
-  // Posición fija frente a la cámara
-  const robotPosition = [0, 0, 0]; // Centrado en la parte inferior de la pantalla
+  const laserStartRef = useRef(new THREE.Vector3(0, 1, 0));
+  const laserEndRef = useRef(new THREE.Vector3(0, 1, -5));
   
   // Cargar el modelo 3D
   const { scene } = useGLTF(robotModelUrl);
   
-  // Aplicar rotación inicial para que mire hacia la cámara
-  scene.rotation.y = 0;
+  useEffect(() => {
+    if (scene) {
+      // Configurar el modelo
+      scene.rotation.y = 0;
+    }
+  }, [scene]);
   
   useFrame(() => {
-    if (ref.current) {
-      // Convertir coordenadas del puntero a un punto en el espacio 3D
-      // que esté en el plano vertical donde están los bugs
-      const x = (pointer.x * viewport.width) / 2;
-      const y = (pointer.y * viewport.height) / 2;
-      const vector = new THREE.Vector3(x, y, 0);
-      vector.unproject(camera);
-      const dir = vector.sub(camera.position).normalize();
-      
-      // Plano vertical donde están los bugs (Z = -5)
-      const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 5);
-      const raycaster = new THREE.Raycaster(camera.position, dir);
-      const intersectionPoint = new THREE.Vector3();
-      raycaster.ray.intersectPlane(plane, intersectionPoint);
-      
-      // Guardar el punto para el láser
-      setTargetPoint(intersectionPoint);
-      
-      // Vector desde el robot al punto del cursor
-      const directionVector = new THREE.Vector3().subVectors(
-        intersectionPoint,
-        new THREE.Vector3(robotPosition[0], robotPosition[1], robotPosition[2])
-      );
-      
-      // Calcular ángulos de rotación
-      // Para horizontal (eje Y), usamos el ángulo en el plano XZ
-      const horizontalAngle = Math.atan2(directionVector.x, directionVector.z);
-      
-      // Para vertical (eje X), usamos el ángulo en el plano vertical
-      const verticalDistance = directionVector.y;
-      const horizontalDistance = Math.sqrt(
-        directionVector.x * directionVector.x + 
-        directionVector.z * directionVector.z
-      );
-      const verticalAngle = Math.atan2(verticalDistance, horizontalDistance);
-      
-      // Factor de proximidad (objetos más cercanos = ángulo más pronunciado)
-      const distanceToTarget = directionVector.length();
-      const proximityFactor = Math.max(0.5, 2 / distanceToTarget);
-      const adjustedVerticalAngle = verticalAngle * proximityFactor;
-      
-      // Límites anatómicos
-      const clampedVerticalAngle = THREE.MathUtils.clamp(
-        adjustedVerticalAngle,
-        -Math.PI * 0.3, // -54 grados
-        Math.PI * 0.3   // 54 grados
-      );
-      
-      // Aplicar rotaciones con suavizado
-      ref.current.rotation.y = THREE.MathUtils.lerp(
-        ref.current.rotation.y,
-        horizontalAngle,
-        0.1
-      );
-      
-      ref.current.rotation.x = THREE.MathUtils.lerp(
-        ref.current.rotation.x,
-        clampedVerticalAngle,
-        0.1
-      );
+    if (!robotRef.current) return;
+    
+    // Coordenadas del cursor normalizadas
+    const normalizedX = pointer.x; // -1 a 1
+    const normalizedY = pointer.y; // -1 a 1
+    
+    // Convertir a coordenadas de mundo
+    const worldX = normalizedX * 7; // Escala para el rango de vista
+    const worldY = normalizedY * 4; // Escala para el rango de vista
+    
+    // Punto final del láser a profundidad fija
+    const targetPoint = new THREE.Vector3(worldX, worldY, -5);
+    laserEndRef.current = targetPoint;
+    
+    // Calcular dirección para la rotación
+    const directionVector = new THREE.Vector3().subVectors(
+      targetPoint,
+      robotRef.current.position
+    );
+    
+    // Ángulos de rotación
+    const horizontalAngle = Math.atan2(directionVector.x, directionVector.z);
+    
+    // Ángulo vertical con restricciones
+    const verticalDistance = directionVector.y;
+    const horizontalDistance = Math.sqrt(
+      directionVector.x * directionVector.x + 
+      directionVector.z * directionVector.z
+    );
+    const verticalAngle = Math.atan2(verticalDistance, horizontalDistance);
+    
+    // Limitar ángulos
+    const clampedVerticalAngle = THREE.MathUtils.clamp(
+      verticalAngle,
+      -Math.PI * 0.3,
+      Math.PI * 0.3
+    );
+    
+    // Aplicar rotaciones
+    robotRef.current.rotation.y = THREE.MathUtils.lerp(
+      robotRef.current.rotation.y,
+      horizontalAngle,
+      0.1
+    );
+    
+    robotRef.current.rotation.x = THREE.MathUtils.lerp(
+      robotRef.current.rotation.x,
+      clampedVerticalAngle,
+      0.1
+    );
+    
+    // Actualizar punto de inicio del láser
+    const laserOrigin = new THREE.Vector3(0, 1, 0);
+    laserOrigin.applyMatrix4(robotRef.current.matrixWorld);
+    laserStartRef.current = laserOrigin;
+    
+    // Actualizar el láser CSS si está disparando
+    if (shooting) {
+      updateCssLaser(laserStartRef.current, laserEndRef.current, camera, true);
     }
   });
-
+  
   // Función para disparar
   const handleShoot = () => {
+    console.log("¡Disparando!");
     setShooting(true);
-    if (onShoot) onShoot(targetPoint);
-    setTimeout(() => setShooting(false), 200);
+    
+    if (onShoot) {
+      onShoot(laserEndRef.current);
+    }
+    
+    // Actualizar el láser CSS
+    setTimeout(() => {
+      setShooting(false);
+      updateCssLaser(laserStartRef.current, laserEndRef.current, camera, false);
+    }, 500);
   };
-
+  
   return (
-    <group ref={ref} position={robotPosition} onClick={handleShoot}>
+    <group 
+      ref={robotRef} 
+      position={[0, 0, 0]} 
+      onClick={handleShoot}
+    >
+      {/* Modelo 3D del robot */}
       <primitive object={scene} />
-      
-      {/* Rayo láser cuando se dispara */}
-      <EnhancedLaserBeam 
-        start={new THREE.Vector3(0, 1, 0).add(new THREE.Vector3().setFromMatrixPosition(ref.current?.matrixWorld || new THREE.Matrix4()))} 
-        end={targetPoint} 
-        active={shooting} 
-        color="#ff0000"
-      />
     </group>
   );
 }
+
 
 // Componente principal del juego
 function Game({ onScoreChange }) {
@@ -300,28 +368,15 @@ function Game({ onScoreChange }) {
       
       // Si el disparo está lo suficientemente cerca del bug, se considera un hit
       if (distance < 0.5) {
-        // Intentar hacer clic en el bug (si está bajo el cursor)
-        const { viewport } = useThree();
-        const bugElement = document.elementFromPoint(
-          (targetPoint.x / (viewport.width / 2)) * window.innerWidth / 2 + window.innerWidth / 2,
-          (-targetPoint.y / (viewport.height / 2)) * window.innerHeight / 2 + window.innerHeight / 2
+        // Alternativa: buscar bug por ID y marcarlo como golpeado
+        setBugs(prevBugs => 
+          prevBugs.map(b => 
+            b.id === bug.id ? { ...b, hit: true } : b
+          )
         );
-        if (bugElement) {
-          bugElement.click();
-        } else {
-          // Alternativa: buscar bug por ID y marcarlo como golpeado
-          setBugs(prevBugs => 
-            prevBugs.map(b => 
-              b.id === bug.id ? { ...b, hit: true } : b
-            )
-          );
-        }
       }
     });
   };
-  
-  // Acceder a viewport para cálculos de coordenadas
-  const { viewport } = useThree();
   
   return (
     <>
@@ -363,29 +418,6 @@ function Game({ onScoreChange }) {
           onHit={handleHitBug} 
         />
       ))}
-      
-      {/* Plano o suelo */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, -0.5, 0]}>
-        <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#303030" />
-      </mesh>
-      
-      {/* Fondo para los bugs (plano vertical) */}
-      <mesh position={[0, 2, -8]} receiveShadow>
-        <planeGeometry args={[20, 10]} />
-        <meshStandardMaterial color="#1a1a2e" />
-      </mesh>
-      
-      {/* Paredes laterales para mejor contexto espacial */}
-      <mesh position={[-10, 2, -3]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <planeGeometry args={[10, 5]} />
-        <meshStandardMaterial color="#252538" />
-      </mesh>
-      
-      <mesh position={[10, 2, -3]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
-        <planeGeometry args={[10, 5]} />
-        <meshStandardMaterial color="#252538" />
-      </mesh>
       
       {/* Efecto visual cuando el nivel está vacío */}
       {bugs.length === 0 && score > 0 && (
