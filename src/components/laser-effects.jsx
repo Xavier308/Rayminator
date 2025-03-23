@@ -4,70 +4,42 @@ import * as THREE from 'three';
 
 // Componente de rayo láser mejorado con efectos
 export function EnhancedLaserBeam({ start, end, active, color = '#ff0000' }) {
-  const laserRef = useRef();
-  const glowRef = useRef();
-  const particlesRef = useRef();
-  const impactRef = useRef();
-  
-  const [particles, setParticles] = useState([]);
-  const [impactParticles, setImpactParticles] = useState([]);
-  
-  // Configurar partículas cuando se activa el láser
-  useEffect(() => {
-    if (active) {
-      // Partículas a lo largo del rayo
-      const newParticles = [];
-      for (let i = 0; i < 20; i++) {
-        newParticles.push({
-          id: i,
-          position: new THREE.Vector3(),
-          velocity: new THREE.Vector3(
-            (Math.random() - 0.5) * 0.02,
-            (Math.random() - 0.5) * 0.02,
-            (Math.random() - 0.5) * 0.02
-          ),
-          size: Math.random() * 0.1 + 0.05,
-          life: 1.0
-        });
+    const laserRef = useRef();
+    const glowRef = useRef();
+    const particlesRef = useRef();
+    const impactRef = useRef();
+    
+    const [particles, setParticles] = useState([]);
+    const [impactParticles, setImpactParticles] = useState([]);
+    const [laserOrigin, setLaserOrigin] = useState(new THREE.Vector3());
+    
+    // Calculate actual laser origin from robot's position
+    useEffect(() => {
+      if (start) {
+        setLaserOrigin(start.clone());
       }
-      setParticles(newParticles);
+    }, [start]);
+    
+    // Rest of component code remains the same
+    
+    // Update this part in useFrame
+    useFrame((state, delta) => {
+      if (!active || !start || !end || !laserRef.current) return;
       
-      // Partículas de impacto
-      const newImpactParticles = [];
-      for (let i = 0; i < 15; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 0.1 + 0.05;
-        newImpactParticles.push({
-          id: i,
-          position: new THREE.Vector3(),
-          velocity: new THREE.Vector3(
-            Math.cos(angle) * speed,
-            Math.sin(angle) * speed,
-            Math.random() * 0.05 - 0.025
-          ),
-          size: Math.random() * 0.15 + 0.05,
-          life: 1.0
-        });
-      }
-      setImpactParticles(newImpactParticles);
-    }
-  }, [active]);
-  
-  // Actualizar posición y efectos del láser
-  useFrame((state, delta) => {
-    if (!active || !start || !end || !laserRef.current) return;
-    
-    // Vector dirección
-    const direction = new THREE.Vector3().subVectors(end, start).normalize();
-    
-    // Distancia
-    const distance = start.distanceTo(end);
-    
-    // Punto medio para posicionar el cilindro del láser
-    const midpoint = new THREE.Vector3().addVectors(
-      start,
-      direction.clone().multiplyScalar(distance / 2)
-    );
+      // Update laser origin based on current robot position
+      setLaserOrigin(start.clone());
+      
+      // Vector dirección
+      const direction = new THREE.Vector3().subVectors(end, laserOrigin).normalize();
+      
+      // Distancia
+      const distance = laserOrigin.distanceTo(end);
+      
+      // Punto medio para posicionar el cilindro del láser
+      const midpoint = new THREE.Vector3().addVectors(
+        laserOrigin,
+        direction.clone().multiplyScalar(distance / 2)
+      );
     
     // Actualizar posición y rotación del láser
     laserRef.current.position.copy(midpoint);
