@@ -2,7 +2,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { updateCssLaser } from '../utils/laserUtils';
-
 import { 
   useGLTF, 
   Environment, 
@@ -12,6 +11,7 @@ import {
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { BugExplosion } from './laser-effects';
+
 
 // Importar modelos 3D
 import robotModelUrl from '/models/rayminator.glb';
@@ -194,7 +194,7 @@ function UltraVisibleLaser({ start, end, active }) {
   );
 }
 
-// Componente Robot completo con láser CSS
+// Componente Robot modificado con más logs
 function Robot({ onShoot }) {
   const robotRef = useRef();
   const { camera, pointer, viewport } = useThree();
@@ -207,7 +207,6 @@ function Robot({ onShoot }) {
   
   useEffect(() => {
     if (scene) {
-      // Configurar el modelo
       scene.rotation.y = 0;
     }
   }, [scene]);
@@ -277,18 +276,101 @@ function Robot({ onShoot }) {
   
   // Función para disparar
   const handleShoot = () => {
-    console.log("¡Disparando!");
+    console.log("¡Disparando!", {
+      start: {
+        x: laserStartRef.current.x,
+        y: laserStartRef.current.y,
+        z: laserStartRef.current.z
+      },
+      end: {
+        x: laserEndRef.current.x,
+        y: laserEndRef.current.y,
+        z: laserEndRef.current.z
+      }
+    });
+    
     setShooting(true);
     
     if (onShoot) {
       onShoot(laserEndRef.current);
     }
     
+    // Crear un láser CSS directamente como prueba
+    try {
+      const start = document.querySelector("#start-marker") || document.createElement("div");
+      const end = document.querySelector("#end-marker") || document.createElement("div");
+      const line = document.querySelector("#test-line") || document.createElement("div");
+      
+      if (!document.querySelector("#start-marker")) {
+        start.id = "start-marker";
+        start.style.position = "absolute";
+        start.style.width = "10px";
+        start.style.height = "10px";
+        start.style.backgroundColor = "yellow";
+        start.style.borderRadius = "50%";
+        start.style.zIndex = "1000";
+        document.body.appendChild(start);
+      }
+      
+      if (!document.querySelector("#end-marker")) {
+        end.id = "end-marker";
+        end.style.position = "absolute";
+        end.style.width = "10px";
+        end.style.height = "10px";
+        end.style.backgroundColor = "red";
+        end.style.borderRadius = "50%";
+        end.style.zIndex = "1000";
+        document.body.appendChild(end);
+      }
+      
+      if (!document.querySelector("#test-line")) {
+        line.id = "test-line";
+        line.style.position = "absolute";
+        line.style.backgroundColor = "red";
+        line.style.height = "5px";
+        line.style.transformOrigin = "0 0";
+        line.style.zIndex = "999";
+        document.body.appendChild(line);
+      }
+      
+      // Convertir posiciones 3D a coordenadas de pantalla
+      const startScreen = worldToScreen(laserStartRef.current, camera);
+      const endScreen = worldToScreen(laserEndRef.current, camera);
+      
+      // Posicionar marcadores
+      start.style.left = `${startScreen.x - 5}px`;
+      start.style.top = `${startScreen.y - 5}px`;
+      
+      end.style.left = `${endScreen.x - 5}px`;
+      end.style.top = `${endScreen.y - 5}px`;
+      
+      // Calcular línea
+      const dx = endScreen.x - startScreen.x;
+      const dy = endScreen.y - startScreen.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx);
+      
+      // Posicionar línea
+      line.style.width = `${distance}px`;
+      line.style.left = `${startScreen.x}px`;
+      line.style.top = `${startScreen.y}px`;
+      line.style.transform = `rotate(${angle}rad)`;
+      
+      console.log("Elementos de prueba creados y posicionados", {
+        startPos: startScreen,
+        endPos: endScreen,
+        distance,
+        angle: angle * (180/Math.PI)
+      });
+    } catch (error) {
+      console.error("Error al crear elementos de prueba:", error);
+    }
+    
     // Actualizar el láser CSS
     setTimeout(() => {
       setShooting(false);
       updateCssLaser(laserStartRef.current, laserEndRef.current, camera, false);
-    }, 500);
+    }, 2000); // Más tiempo para ver el láser
   };
   
   return (
@@ -302,7 +384,6 @@ function Robot({ onShoot }) {
     </group>
   );
 }
-
 
 // Componente principal del juego
 function Game({ onScoreChange }) {
