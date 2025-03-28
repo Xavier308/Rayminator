@@ -135,16 +135,13 @@ function Bug({ bugData, onHit }) {
             setShowExplosion(true); // Muestra explosión
             if (ref.current) ref.current.visible = false; // Oculta el modelo
 
-            // Inicia un temporizador para llamar a onHit (handleBugRemoval en Game)
-            const timer = setTimeout(() => {
-                if (onHit) {
-                    console.log(`>>> Bug ${id}: Fin de timeout. LLAMANDO a onHit (handleBugRemoval)...`);
-                    onHit(id); // Notifica a Game para eliminar los datos
-                }
-            }, 1000); // Espera 1 segundo (duración de la explosión)
-
-            // Limpieza del temporizador si el componente se desmonta antes
-            return () => clearTimeout(timer);
+            setTimeout(() => {
+              console.log(`>>> Bug ${id}: Timeout finished. Calling onHit...`);
+              if (onHit) {
+                  onHit(id);
+              }
+          }, 1000); // Wait for explosion duration
+          // Note: No cleanup here!
         }
     }, [hit, isHit, onHit, id]); // Dependencias correctas
 
