@@ -1,18 +1,20 @@
 // src/main.jsx
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css'; // Keep this for base resets IF NEEDED
 
-// Precarga de modelos con Drei (opcional pero recomendado para mejorar rendimiento)
-import { useGLTF } from '@react-three/drei'
-import robotModelUrl from '/models/rayminator.glb';  // Reemplaza con el nombre de tu archivo
+// Precarga de modelos con Drei
+import { useGLTF } from '@react-three/drei';
+import robotModelUrl from '/models/rayminator.glb';
+import beetleModelUrl from '/models/Purple_Beetle.glb'; // Add beetle path
 
-// Precargar el modelo
-useGLTF.preload(robotModelUrl)
+// Preload models
+useGLTF.preload(robotModelUrl);
+useGLTF.preload(beetleModelUrl); // PRELOAD THE BEETLE
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  // <React.StrictMode> // <-- Temporarily comment out
     <App />
-  </React.StrictMode>,
-)
+  // </React.StrictMode> // <-- Temporarily comment out
+);

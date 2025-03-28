@@ -1,46 +1,43 @@
-// src/App.jsx - Simplified implementation
-import { useState, Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { Stats } from '@react-three/drei'
-import Game from './components/Game'
-import './App.css'
+// src/App.jsx 
+import React, { useState, Suspense } from 'react'; // Keep React import
+import { Canvas } from '@react-three/fiber';
+import { Stats } from '@react-three/drei';
+import Game from './components/Game';
+import ErrorBoundary from './components/ErrorBoundary'; // Import the boundary
+import './App.css';
 
-// Loader component
-function Loader() {
-  return (
-    <div className="loader">
-      <div className="spinner"></div>
-      <p>Cargando robot...</p>
-    </div>
-  )
-}
+// Loader component (optional, if needed)
+function Loader() { /* ... */ }
 
 function App() {
   const [score, setScore] = useState(0);
+  console.log("App component rendering"); // Debug Log
 
   return (
     <div className="app-container">
-      <div className="score-container">
-        Score: {score}
-      </div>
-      
+      <div className="score-container">Score: {score}</div>
       <div className="canvas-container">
-        <Canvas
-          shadows
-          camera={{ position: [0, 2, 5], fov: 50 }}
-        >
-          <Stats />
-          <Suspense fallback={null}>
-            <Game 
-              onScoreChange={(newScore) => setScore(newScore)} 
-            />
-          </Suspense>
-        </Canvas>
+        {/* Wrap Canvas content in ErrorBoundary */}
+        <ErrorBoundary>
+          <Canvas
+            shadows
+            camera={{ position: [0, 2.5, 6], fov: 50 }}
+            onCreated={() => console.log("Canvas Created")} // Debug Log
+          >
+            <Stats />
+            {/* Set a background color for the canvas itself */}
+            <color attach="background" args={['#282c34']} />
+            <Suspense fallback={null}> {/* Ensure Suspense wraps Game */}
+              <Game
+                onScoreChange={(newScore) => setScore(newScore)}
+              />
+            </Suspense>
+          </Canvas>
+        </ErrorBoundary>
       </div>
-      
-      {/* IMPORTANT: Removed the CSS laser overlay entirely */}
+      <div className="controls-help">Dispara: Tecla F o click en robot | Apunta: Mouse</div>
     </div>
   );
 }
 
-export default App
+export default App;
