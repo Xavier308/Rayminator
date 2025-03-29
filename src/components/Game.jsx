@@ -369,7 +369,7 @@ function Game({ onScoreChange }) {
             id: `${level}-${i}-${Math.random().toString(16).slice(2)}`, // ID único
             position: [
                 Math.random() * 14 - 7,    // X: -7 a 7
-                Math.random() * 2.5 + 0.5, // Y: 0.5 a 3.0
+                Math.random() * 1 + 2.0, // Y: 0.5 a 3.0
                 -5                         // Z: Fijo en -5
             ],
             hit: false, // Estado inicial: no golpeado
@@ -485,8 +485,8 @@ function Game({ onScoreChange }) {
                 outlineColor="#000000"
             >
                 {/* Muestra información actual del juego */}
-                Level: {level} | Score: {score} | Bugs Left: {bugs.filter(b => !b.hit).length}
-                {'\n'}(Shoot: F / Click Robot Zone)
+                {/*Level: {level} | Score: {score} | Bugs Left: {bugs.filter(b => !b.hit).length}*/}
+                {/*{'\n'}(Shoot: F / Click Robot Zone)*/}
             </Text>
 
             {/* Robot (con Suspense para carga) */}
@@ -509,7 +509,7 @@ function Game({ onScoreChange }) {
             {bugs.length === 0 && score > 0 && (
                 <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
                     <Text
-                        position={[0, 2, -4]} // Posición del mensaje
+                        position={[0, 2, 0]} // Posición del mensaje -4
                         fontSize={0.6}
                         color="#FFD700" // Color dorado
                         anchorX="center"

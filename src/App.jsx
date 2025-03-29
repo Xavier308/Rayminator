@@ -1,13 +1,12 @@
-// src/App.jsx 
+// SOLUCIÓN PARA src/App.jsx
+// Esta solución ajusta todo el juego bajando la cámara y los elementos
+
 import React, { useState, Suspense } from 'react'; // Keep React import
 import { Canvas } from '@react-three/fiber';
-import { Stats } from '@react-three/drei';
+// import { Stats } from '@react-three/drei'; // Comentamos Stats para eliminar ventana FPS
 import Game from './components/Game';
-import ErrorBoundary from './components/ErrorBoundary'; // Import the boundary
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
-
-// Loader component (optional, if needed)
-function Loader() { /* ... */ }
 
 function App() {
   const [score, setScore] = useState(0);
@@ -21,13 +20,15 @@ function App() {
         <ErrorBoundary>
           <Canvas
             shadows
-            camera={{ position: [0, 2.5, 6], fov: 50 }}
-            onCreated={() => console.log("Canvas Created")} // Debug Log
+            camera={{ 
+              position: [0, 0.5, 6], // CAMBIO PRINCIPAL: Bajamos la cámara de 2.5 a 0.5
+              fov: 50 
+            }}
+            onCreated={() => console.log("Canvas Created")}
           >
-            <Stats />
-            {/* Set a background color for the canvas itself */}
+            {/* <Stats /> */} {/* Comentamos Stats para quitar ventana FPS */}
             <color attach="background" args={['#282c34']} />
-            <Suspense fallback={null}> {/* Ensure Suspense wraps Game */}
+            <Suspense fallback={null}>
               <Game
                 onScoreChange={(newScore) => setScore(newScore)}
               />
@@ -35,7 +36,7 @@ function App() {
           </Canvas>
         </ErrorBoundary>
       </div>
-      <div className="controls-help">Dispara: Tecla F o click en robot | Apunta: Mouse</div>
+      <div className="controls-help">Shoot: Press F or click on the robot | Aim: Mouse</div>
     </div>
   );
 }
