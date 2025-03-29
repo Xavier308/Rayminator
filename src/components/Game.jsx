@@ -430,7 +430,7 @@ function Game({ onScoreChange }) {
             return;
         }
 
-        const hitRadius = 1.0; // Radio de impacto
+        const hitRadius = 0.5; // Radio de impacto
         let hitOccurred = false;
         let hitCount = 0; // Contador de cuántos se golpearon en este disparo
 
