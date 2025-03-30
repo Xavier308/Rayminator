@@ -291,19 +291,24 @@ function Robot({ onShoot }) {
 
     // Función interna para manejar la lógica del disparo
     const internalHandleShoot = useCallback((overrideTarget = null) => {
-        // Determina el punto final a usar (override o estado laserEnd)
-        const finalTarget = overrideTarget instanceof THREE.Vector3 && isFinite(overrideTarget.x)
-                           ? overrideTarget
-                           : (laserEnd instanceof THREE.Vector3 && isFinite(laserEnd.x) ? laserEnd.clone() : new THREE.Vector3(0, 1, -5)); // Fallback
-
-        // Llama a la función onShoot pasada desde Game
-        if (typeof onShoot === 'function') {
-            try { onShoot(finalTarget); } catch (e) { console.error("Error calling onShoot prop:", e); }
-        } else { console.warn("onShoot prop is not a function!"); }
-
-        // Activa el efecto visual del disparo
-        setIsShooting(true);
-        setTimeout(() => setIsShooting(false), 150); // Duración del efecto visual
+      // Determina el punto final a usar (override o estado laserEnd)
+      const finalTarget = overrideTarget instanceof THREE.Vector3 && isFinite(overrideTarget.x)
+                         ? overrideTarget
+                         : (laserEnd instanceof THREE.Vector3 && isFinite(laserEnd.x) ? laserEnd.clone() : new THREE.Vector3(0, 1, -5)); // Fallback
+    
+      // Play laser sound if available
+      if (window.playLaser) {
+        window.playLaser();
+      }
+    
+      // Llama a la función onShoot pasada desde Game
+      if (typeof onShoot === 'function') {
+        try { onShoot(finalTarget); } catch (e) { console.error("Error calling onShoot prop:", e); }
+      } else { console.warn("onShoot prop is not a function!"); }
+    
+      // Activa el efecto visual del disparo
+      setIsShooting(true);
+      setTimeout(() => setIsShooting(false), 150); // Duración del efecto visual
     }, [onShoot, laserEnd]); // Dependencias
 
     // Listener para la tecla 'F'
@@ -386,27 +391,34 @@ function Game({ onScoreChange }) {
     }, [score, onScoreChange]); // Se ejecuta cuando 'score' cambia
 
     // Comprobar si el nivel está completado
-    useEffect(() => {
-        // Log para depurar el estado en cada comprobación
-        console.log(`--- Level Check --- Bugs State Length: ${bugs.length}, Score: ${score}, Level: ${level}`);
+// Comprobar si el nivel está completado
+useEffect(() => {
+  // Log para depurar el estado en cada comprobación
+  console.log(`--- Level Check --- Bugs State Length: ${bugs.length}, Score: ${score}, Level: ${level}`);
 
-        // Condición: No quedan bugs (array vacío) Y ya se ha puntuado algo
-        if (bugs.length === 0 && score > 0) {
-            console.log(`%c>>> LEVEL ${level} COMPLETE! Setting timeout for level ${level + 1}`, 'color: green; font-weight: bold;');
-            // Iniciar temporizador para pasar al siguiente nivel
-            const timerId = setTimeout(() => {
-                console.log(`%c>>> Timeout Fired! Advancing to level ${level + 1}`, 'color: blue; font-weight: bold;');
-                setLevel(prevLevel => prevLevel + 1); // Actualiza el estado del nivel
-            }, 2500); // Espera 2.5 segundos
+  // Condición: No quedan bugs (array vacío) Y ya se ha puntuado algo
+  if (bugs.length === 0 && score > 0) {
+    console.log(`%c>>> LEVEL ${level} COMPLETE! Setting timeout for level ${level + 1}`, 'color: green; font-weight: bold;');
+    
+    // Play level complete sound if available
+    if (window.playLevelComplete) {
+      window.playLevelComplete();
+    }
+    
+    // Iniciar temporizador para pasar al siguiente nivel
+    const timerId = setTimeout(() => {
+      console.log(`%c>>> Timeout Fired! Advancing to level ${level + 1}`, 'color: blue; font-weight: bold;');
+      setLevel(prevLevel => prevLevel + 1); // Actualiza el estado del nivel
+    }, 2500); // Espera 2.5 segundos
 
-            // Función de limpieza para el temporizador
-            return () => {
-                console.log(`>>> Cleanup: Clearing level timer ${timerId} for level ${level}.`);
-                clearTimeout(timerId);
-             };
-        }
-        // Si la condición no se cumple, no se hace nada
-    }, [bugs, score, level]); // Dependencias: el estado 'bugs', 'score', y 'level'
+    // Función de limpieza para el temporizador
+    return () => {
+      console.log(`>>> Cleanup: Clearing level timer ${timerId} for level ${level}.`);
+      clearTimeout(timerId);
+    };
+  }
+  // Si la condición no se cumple, no se hace nada
+}, [bugs, score, level]); // Dependencias: el estado 'bugs', 'score', y 'level'
 
     // --- Callbacks ---
 

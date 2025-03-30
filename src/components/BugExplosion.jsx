@@ -1,22 +1,27 @@
-// src/components/BugExplosion.jsx 
+// src/components/BugExplosion.jsx - Updated with sound
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Simplified and reliable explosion effect
+// Enhanced explosion effect with sound
 export function BugExplosion({ position, onComplete }) {
   const [particles, setParticles] = useState([]);
   const explosionRef = useRef();
   const [life, setLife] = useState(1.0);
   
-  // Create particles on mount
+  // Create particles on mount and play sound
   useEffect(() => {
+    // Play explosion sound if available
+    if (window.playExplosion) {
+      window.playExplosion();
+    }
+    
     const newParticles = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) { // Increased particle count for better effect
       // Random directions using spherical coordinates
       const angle = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 0.2 + 0.1;
+      const speed = Math.random() * 0.3 + 0.15; // Increased speed slightly
       
       newParticles.push({
         id: i,
@@ -26,8 +31,13 @@ export function BugExplosion({ position, onComplete }) {
           Math.sin(angle) * Math.sin(phi) * speed,
           Math.cos(angle) * speed
         ),
-        size: Math.random() * 0.2 + 0.1,
-        life: 1.0
+        size: Math.random() * 0.25 + 0.1,
+        life: 1.0,
+        color: new THREE.Color(
+          0.8 + Math.random() * 0.2, // More red variation
+          0.3 + Math.random() * 0.3, // Some green for yellow-orange effect
+          Math.random() * 0.1       // Less blue
+        )
       });
     }
     setParticles(newParticles);
@@ -54,7 +64,7 @@ export function BugExplosion({ position, onComplete }) {
         );
         
         // Apply drag to slow particles over time
-        const newVelocity = particle.velocity.clone().multiplyScalar(0.95);
+        const newVelocity = particle.velocity.clone().multiplyScalar(0.92);
         
         // Reduce particle lifetime
         const newLife = particle.life - delta * 1.5;
@@ -89,18 +99,18 @@ export function BugExplosion({ position, onComplete }) {
         >
           <sphereGeometry args={[1, 8, 8]} />
           <meshBasicMaterial 
-            color="#ff6600" 
+            color={particle.color}
             transparent 
-            opacity={particle.life * 0.8}
+            opacity={particle.life * 0.9}
             blending={THREE.AdditiveBlending} 
           />
         </mesh>
       ))}
       
-      {/* Light effect */}
+      {/* Enhanced light effect */}
       <pointLight 
-        intensity={life * 5} 
-        distance={5} 
+        intensity={life * 8} 
+        distance={8} 
         color="#ff5500" 
         decay={2}
       />

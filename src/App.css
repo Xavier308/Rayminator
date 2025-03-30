@@ -180,3 +180,74 @@ body, html {
   from { transform: translate(-50%, -50%) scale(0.8); }
   to { transform: translate(-50%, -50%) scale(1.2); }
 }
+
+
+/* Audio toggle button */
+.audio-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--text-color);
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 10px rgba(255, 85, 0, 0.3);
+}
+
+.audio-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 15px rgba(255, 85, 0, 0.6);
+  transform: scale(1.05);
+}
+
+.audio-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Enhanced laser styles */
+.laser-beam {
+  position: absolute;
+  background: linear-gradient(90deg, rgba(255,0,0,0.8) 0%, rgba(255,0,0,1) 50%, rgba(255,0,0,0.8) 100%); 
+  height: 4px;
+  transform-origin: 0 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+  filter: blur(2px);
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+}
+
+.laser-beam.active {
+  opacity: 0.9;
+}
+
+.laser-impact {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,50,0,1) 0%, rgba(255,165,0,0.7) 50%, rgba(255,255,0,0) 100%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.1s;
+  filter: blur(3px);
+  box-shadow: 0 0 20px rgba(255, 50, 0, 0.8);
+}
+
+.laser-impact.active {
+  opacity: 1;
+  animation: pulse 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: translate(-50%, -50%) scale(0.8); filter: brightness(0.8); }
+  to { transform: translate(-50%, -50%) scale(1.2); filter: brightness(1.2); }
+}
