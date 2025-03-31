@@ -55,8 +55,7 @@ Rayminator-game
 └── src
     ├── App.css
     ├── App.jsx
-    ├── assets
-    │   └── react.svg
+    │
     ├── components
     │   ├── AudioSystem.jsx
     │   ├── BugExplosion.jsx
@@ -67,8 +66,6 @@ Rayminator-game
     │   └── VisualLaserEffect.jsx
     ├── index.css
     ├── main.jsx
-    └── utils
-        └── laserUtils.js
 ```
 
 ## Installation
