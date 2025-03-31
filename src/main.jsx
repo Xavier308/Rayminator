@@ -2,9 +2,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import './index.css'; // Keep this for base resets IF NEEDED
+//import './index.css'; // Keep this for base resets IF NEEDED
 
-// Precarga de modelos con Drei
+// Model preloading with Drei
 import { useGLTF } from '@react-three/drei';
 import robotModelUrl from '/models/rayminator.glb';
 import beetleModelUrl from '/models/Purple_Beetle.glb'; // Add beetle path

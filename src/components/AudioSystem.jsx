@@ -87,7 +87,7 @@ const AudioSystem = ({ musicEnabled = true, soundEnabled = true }) => {
       {/* Background Music */}
       {musicEnabled && (
         <audio ref={bgMusicRef} preload="auto">
-          <source src="/audio/cyberpunk-background.mp3" type="audio/mp3" />
+          <source src="/audio/arcade-loop.mp3" type="audio/mp3" />
           Your browser does not support the audio element.
         </audio>
       )}

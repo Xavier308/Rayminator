@@ -1,7 +1,7 @@
 // UPDATED src/App.jsx with Audio and Background
 import React, { useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-// import { Stats } from '@react-three/drei'; // Comentamos Stats para eliminar ventana FPS
+// import { Stats } from '@react-three/drei'; // Commented out Stats to remove the FPS window
 import Game from './components/Game';
 import ErrorBoundary from './components/ErrorBoundary';
 import AudioSystem from './components/AudioSystem';
@@ -34,12 +34,12 @@ function App() {
           <Canvas
             shadows
             camera={{ 
-              position: [0, 0.5, 6], // CAMBIO PRINCIPAL: Bajamos la cámara de 2.5 a 0.5
+              position: [0, 0.5, 6], // MAIN CHANGE: Lowered camera from 2.5 to 0.5
               fov: 50 
             }}
             onCreated={() => console.log("Canvas Created")}
           >
-            {/* <Stats /> */} {/* Comentamos Stats para quitar ventana FPS */}
+            {/* <Stats /> */} {/* Commented out Stats to remove the FPS window */}
             <color attach="background" args={['#101010']} /> {/* Darker background for code effect */}
             
             {/* Matrix Code Background */}

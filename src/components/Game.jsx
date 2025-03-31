@@ -1,4 +1,4 @@
-// src/components/Game.jsx - v4 - Archivo Completo y Corregido
+// src/components/Game.jsx - v4 - Complete and Corrected File
 import React, { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import {
@@ -9,53 +9,53 @@ import {
     Line,
 } from '@react-three/drei';
 import * as THREE from 'three';
-import { BugExplosion } from './BugExplosion'; // Asegúrate que la ruta sea correcta
+import { BugExplosion } from './BugExplosion'; // Make sure the path is correct
 
-// URLs de Modelos
+// Model URLs
 const robotModelUrl = '/models/rayminator.glb';
 const beetleModelUrl = '/models/Purple_Beetle.glb';
 
 // ==========================================================================
-// === Componente LaserBeam =================================================
+// === LaserBeam Component =================================================
 // ==========================================================================
 function LaserBeam({ start, end, active = true, shooting = false }) {
-    // Validación básica de props
+    // Basic props validation
     if (!active || !start || !end) return null;
 
-    // Asegurar que start/end sean Vector3 válidos
+    // Ensure start/end are valid Vector3
     const startV = useMemo(() => start instanceof THREE.Vector3 ? start : new THREE.Vector3(...(Array.isArray(start) ? start : [0,0,0])), [start]);
     const endV = useMemo(() => end instanceof THREE.Vector3 ? end : new THREE.Vector3(...(Array.isArray(end) ? end : [0,0,0])), [end]);
 
-    // Validación adicional para endV (evitar NaN/Infinity)
+    // Additional validation for endV (avoid NaN/Infinity)
     if (!endV || !isFinite(endV.x) || !isFinite(endV.y) || !isFinite(endV.z)) {
-        // console.warn("LaserBeam received invalid end vector"); // Log opcional
+        // console.warn("LaserBeam received invalid end vector"); // Optional log
         return null;
     }
 
-    // Calcular puntos para la línea
+    // Calculate points for the line
     const points = useMemo(() => [startV.toArray(), endV.toArray()], [startV, endV]);
-    // Clave única para re-renderizado
+    // Unique key for re-rendering
     const key = useMemo(() => points.flat().join(','), [points]);
 
-    // Efecto de pulso
+    // Pulse effect
     const pulseRef = useRef(0);
     useFrame(({ clock }) => {
         pulseRef.current = Math.sin(clock.getElapsedTime() * (shooting ? 15 : 5)) * 0.2 + 0.8;
     });
 
-    // Propiedades visuales del láser
+    // Visual properties of the laser
     const mainLineWidth = shooting ? 6 : 3;
     const glowLineWidth = shooting ? 10 : 5;
     const glowOpacity = shooting ? pulseRef.current * 0.8 : pulseRef.current * 0.5;
     const mainColor = shooting ? "#ff3300" : "#ff0000";
     const glowColor = shooting ? "#ff6600" : "#ff6600";
 
-    // Renderizado del láser
+    // Laser rendering
     return (
         <group>
             <Line points={points} color={mainColor} lineWidth={mainLineWidth} transparent={shooting} opacity={shooting ? 0.8 : 1.0} key={key}/>
             <Line points={points} color={glowColor} lineWidth={glowLineWidth} transparent={true} opacity={glowOpacity} key={'glow-' + key} />
-            {/* Luces en los extremos del láser */}
+            {/* Lights at the ends of the laser */}
             <pointLight position={startV.toArray()} intensity={shooting ? 2 : 0.5} distance={2} color="#ffcc00" />
             <pointLight position={endV.toArray()} intensity={shooting ? 5 : 1} distance={3} color="#ff3300" />
         </group>
@@ -63,59 +63,59 @@ function LaserBeam({ start, end, active = true, shooting = false }) {
 }
 
 // ==========================================================================
-// === Componente Bug =======================================================
+// === Bug Component =======================================================
 // ==========================================================================
 function Bug({ bugData, onHit }) {
     const ref = useRef();
     const { id, position, hit, animationIndex } = bugData || {};
 
-    // Validación inicial de datos
+    // Initial data validation
     if (!id || !position || animationIndex === undefined) {
         console.error("Bug component received invalid bugData:", bugData);
         return null;
     }
 
-    // Estado interno del Bug
+    // Bug's internal state
     const [hovered, setHovered] = useState(false);
-    const [isHit, setIsHit] = useState(hit); // Sincronizado con la prop 'hit'
+    const [isHit, setIsHit] = useState(hit); // Synchronized with 'hit' prop
     const [showExplosion, setShowExplosion] = useState(false);
 
-    // Carga del modelo GLTF
+    // GLTF model loading
     const { scene: bugModel, error: bugModelError } = useGLTF(beetleModelUrl);
     useEffect(() => {
         if (bugModelError) console.error(`Bug ${id}: Model Load Error`, bugModelError);
     }, [bugModelError, id]);
 
-    // Posición base del bug (memoizada)
+    // Bug's base position (memoized)
     const bugPosition = useMemo(() => new THREE.Vector3(position[0], position[1], position[2] ?? -5), [position]);
 
-    // Efecto para configurar el modelo 3D una vez cargado
+    // Effect to set up the 3D model once loaded
     useEffect(() => {
         if (bugModel && ref.current) {
             const clonedModel = bugModel.clone();
-            clonedModel.scale.set(0.33, 0.33, 0.33); // Ajustar escala
-            ref.current.clear(); // Limpiar contenido anterior
-            ref.current.add(clonedModel); // Añadir modelo
-            ref.current.position.copy(bugPosition); // Establecer posición inicial
-            ref.current.visible = true; // Asegurar visibilidad
+            clonedModel.scale.set(0.33, 0.33, 0.33); // Adjust scale
+            ref.current.clear(); // Clear previous content
+            ref.current.add(clonedModel); // Add model
+            ref.current.position.copy(bugPosition); // Set initial position
+            ref.current.visible = true; // Ensure visibility
         }
-    }, [bugModel, bugPosition]); // Dependencias: modelo y posición base
+    }, [bugModel, bugPosition]); // Dependencies: model and base position
 
-    // Efecto Hover (comentado, añadir lógica si se desea)
+    // Hover effect (commented, add logic if desired)
     useEffect(() => {
         if (!ref.current || isHit || !bugModel) return;
-        // Lógica para cambiar apariencia en hover aquí...
-        // console.log(`Bug ${id} Hover: ${hovered}`); // Log opcional
+        // Logic to change appearance on hover here...
+        // console.log(`Bug ${id} Hover: ${hovered}`); // Optional log
     }, [hovered, isHit, bugModel, id]);
 
-    // Animación de movimiento del bug
+    // Bug movement animation
     useFrame((state, delta) => {
-        if (ref.current && !isHit) { // Solo animar si no está golpeado
+        if (ref.current && !isHit) { // Only animate if not hit
             try {
                 const t = state.clock.elapsedTime;
                 const i = animationIndex;
                 const px = bugPosition.x, py = bugPosition.y;
-                // Calcular nueva posición y rotación
+                // Calculate new position and rotation
                 ref.current.position.x = px + Math.sin(t * 1.5 + i * 0.5) * 0.15;
                 ref.current.position.y = py + Math.cos(t * 2 + i * 1.0) * 0.15;
                 ref.current.rotation.z = Math.sin(t * 1.2 + i * 0.8) * 0.1;
@@ -126,14 +126,14 @@ function Bug({ bugData, onHit }) {
         }
     });
 
-    // Efecto para procesar cuando el bug es golpeado
+    // Effect to process when the bug is hit
     useEffect(() => {
-        // Se activa cuando la prop 'hit' externa cambia a true
+        // Activates when the external 'hit' prop changes to true
         if (hit && !isHit) {
-            console.log(`Bug ${id} detectó hit=true. Iniciando proceso de hit.`);
-            setIsHit(true); // Actualiza estado interno
-            setShowExplosion(true); // Muestra explosión
-            if (ref.current) ref.current.visible = false; // Oculta el modelo
+            console.log(`Bug ${id} detected hit=true. Starting hit process.`);
+            setIsHit(true); // Updates internal state
+            setShowExplosion(true); // Shows explosion
+            if (ref.current) ref.current.visible = false; // Hides the model
 
             setTimeout(() => {
               console.log(`>>> Bug ${id}: Timeout finished. Calling onHit...`);
@@ -143,26 +143,26 @@ function Bug({ bugData, onHit }) {
           }, 1000); // Wait for explosion duration
           // Note: No cleanup here!
         }
-    }, [hit, isHit, onHit, id]); // Dependencias correctas
+    }, [hit, isHit, onHit, id]); // Correct dependencies
 
-    // Renderizado condicional del Bug y la Explosión
+    // Conditional rendering of Bug and Explosion
     return (
         <>
-            {/* Grupo del bug (visible si no está golpeado) */}
+            {/* Bug group (visible if not hit) */}
             {!isHit && (
                 <group
                     ref={ref}
-                    scale={hovered ? 1.1 : 1.0} // Efecto hover simple
+                    scale={hovered ? 1.1 : 1.0} // Simple hover effect
                     onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                     onPointerOut={(e) => { e.stopPropagation(); setHovered(false); }}
-                    visible={true} // Modelo se añade en useEffect
+                    visible={true} // Model added in useEffect
                 />
             )}
-            {/* Explosión (visible si showExplosion es true) */}
+            {/* Explosion (visible if showExplosion is true) */}
             {showExplosion && (
                 <BugExplosion
                     position={bugPosition.toArray()}
-                    onComplete={() => setShowExplosion(false)} // Oculta al terminar
+                    onComplete={() => setShowExplosion(false)} // Hides when finished
                 />
             )}
         </>
@@ -170,20 +170,20 @@ function Bug({ bugData, onHit }) {
 }
 
 // ==========================================================================
-// === Componente Robot =====================================================
+// === Robot Component =====================================================
 // ==========================================================================
 function Robot({ onShoot }) {
-    const robotGroupRef = useRef(); // Ref para el grupo que contiene el modelo
-    const laserOriginRef = useRef(); // Ref para el Object3D que marca el origen del láser
-    const { pointer, camera } = useThree(); // Hooks de R3F
+    const robotGroupRef = useRef(); // Ref for the group containing the model
+    const laserOriginRef = useRef(); // Ref for the Object3D that marks the laser's origin
+    const { pointer, camera } = useThree(); // R3F hooks
 
-    // Estado del Robot
-    const [isShooting, setIsShooting] = useState(false); // ¿Está disparando visualmente?
-    const [laserStart, setLaserStart] = useState(() => new THREE.Vector3(0, 1, 0)); // Punto de inicio del láser
-    const [laserEnd, setLaserEnd] = useState(() => new THREE.Vector3(0, 1, -5)); // Punto final (objetivo) del láser
-    const [modelLoaded, setModelLoaded] = useState(false); // ¿Se cargó el modelo?
+    // Robot's State
+    const [isShooting, setIsShooting] = useState(false); // Is visually shooting?
+    const [laserStart, setLaserStart] = useState(() => new THREE.Vector3(0, 1, 0)); // Laser's starting point
+    const [laserEnd, setLaserEnd] = useState(() => new THREE.Vector3(0, 1, -5)); // Laser's end point (target)
+    const [modelLoaded, setModelLoaded] = useState(false); // Is the model loaded?
 
-    // Carga del modelo GLTF del robot
+    // Robot's GLTF model loading
     const { scene: robotScene, error: robotModelError } = useGLTF(robotModelUrl);
     useEffect(() => {
         if (robotModelError) {
@@ -194,77 +194,77 @@ function Robot({ onShoot }) {
         }
     }, [robotScene, robotModelError]);
 
-    // Configuración del modelo una vez cargado
+    // Setting up the model once loaded
     useEffect(() => {
         if (modelLoaded && robotScene && robotGroupRef.current) {
-            const model = robotScene.clone(); // Clonar para evitar modificar original
-            robotGroupRef.current.clear(); // Limpiar grupo
-            robotGroupRef.current.add(model); // Añadir modelo
+            const model = robotScene.clone(); // Clone to avoid modifying original
+            robotGroupRef.current.clear(); // Clear group
+            robotGroupRef.current.add(model); // Add model
 
-            // Crear y añadir helper para origen del láser
+            // Create and add helper for laser origin
             const helper = new THREE.Object3D();
-            helper.position.set(0, 0.9, 0.4); // Ajustar esta posición si es necesario
+            helper.position.set(0, 0.9, 0.4); // Adjust this position if needed
             robotGroupRef.current.add(helper);
-            laserOriginRef.current = helper; // Guardar referencia al helper
+            laserOriginRef.current = helper; // Save reference to helper
 
-            // Actualizar matriz y obtener posición inicial del láser
+            // Update matrix and get initial laser position
             robotGroupRef.current.updateMatrixWorld(true);
             const startPos = new THREE.Vector3();
             helper.getWorldPosition(startPos);
-            setLaserStart(startPos); // Establecer estado inicial
+            setLaserStart(startPos); // Set initial state
             console.log("Robot model setup complete.");
         }
     }, [modelLoaded, robotScene]);
 
-    // Función para calcular el punto de intersección en el plano Z=-5
+    // Function to calculate intersection point on Z=-5 plane
     const getTargetWorldPosition = useCallback((pointerCoords, cam) => {
         if (!cam) return new THREE.Vector3(0, 1, -5); // Fallback
         try {
-            const vec = new THREE.Vector3(pointerCoords.x, pointerCoords.y, 0.5); // Coords normalizadas
-            vec.unproject(cam); // Proyectar al espacio 3D
-            const dir = vec.sub(cam.position).normalize(); // Dirección desde la cámara
-            const dist = (-5 - cam.position.z) / dir.z; // Distancia al plano Z=-5
+            const vec = new THREE.Vector3(pointerCoords.x, pointerCoords.y, 0.5); // Normalized coords
+            vec.unproject(cam); // Project to 3D space
+            const dir = vec.sub(cam.position).normalize(); // Direction from camera
+            const dist = (-5 - cam.position.z) / dir.z; // Distance to Z=-5 plane
 
-            // Validación del cálculo
+            // Calculation validation
             if (isNaN(dist) || Math.abs(dir.z) < 0.001 || dist <= 0 || dist > 100) {
-                // Fallback si es inestable: proyectar en dirección del puntero
+                // Fallback if unstable: project in pointer direction
                 const fbDir = new THREE.Vector3(pointerCoords.x, pointerCoords.y, -1).unproject(cam).sub(cam.position).normalize();
-                return cam.position.clone().add(fbDir.multiplyScalar(10)); // Punto a 10 unidades
+                return cam.position.clone().add(fbDir.multiplyScalar(10)); // Point at 10 units
             }
 
-            // Calcular posición en el plano
+            // Calculate position on the plane
             const pos = cam.position.clone().add(dir.multiplyScalar(dist));
-            // Limitar coordenadas X e Y
+            // Limit X and Y coordinates
             pos.x = THREE.MathUtils.clamp(pos.x, -15, 15);
             pos.y = THREE.MathUtils.clamp(pos.y, -2, 10);
-            pos.z = -5; // Asegurar Z=-5
+            pos.z = -5; // Ensure Z=-5
             return pos;
         } catch (e) {
             console.error("Error calculating target position:", e);
-            return new THREE.Vector3(0, 1, -5); // Fallback en error
+            return new THREE.Vector3(0, 1, -5); // Fallback on error
         }
-    }, []); // Sin dependencias externas
+    }, []); // No external dependencies
 
-    // Bucle de animación (useFrame) para rotación y láser
+    // Animation loop (useFrame) for rotation and laser
     useFrame(() => {
-        // Salir si no está listo
+        // Exit if not ready
         if (!robotGroupRef.current || !modelLoaded || !camera) return;
 
         try {
-            // Calcular punto objetivo actual basado en el puntero
+            // Calculate current target point based on pointer
             const target = getTargetWorldPosition(pointer, camera);
 
-            // Calcular punto de inicio actual del láser
+            // Calculate current laser starting point
             const start = new THREE.Vector3();
             if (laserOriginRef.current) {
                 laserOriginRef.current.getWorldPosition(start);
-            } else { // Fallback si el helper no está listo
+            } else { // Fallback if helper is not ready
                 robotGroupRef.current.getWorldPosition(start);
                 start.y += 0.9;
             }
 
-            // Actualizar estado del láser visual si cambió significativamente
-            if (target && isFinite(target.x)) { // Validar target
+            // Update visual laser state if changed significantly
+            if (target && isFinite(target.x)) { // Validate target
                 if (target.distanceTo(laserEnd) > 0.01) {
                     setLaserEnd(target);
                 }
@@ -273,13 +273,13 @@ function Robot({ onShoot }) {
                 setLaserStart(start);
             }
 
-            // Calcular y aplicar rotación suave (Lerp) del robot
-            const robotPos = robotGroupRef.current.position; // Asume robot en [0,0,0]
+            // Calculate and apply smooth rotation (Lerp) of the robot
+            const robotPos = robotGroupRef.current.position; // Assumes robot at [0,0,0]
             const direction = target.clone().sub(robotPos);
-            const angleY = Math.atan2(direction.x, direction.z); // Rotación Y
+            const angleY = Math.atan2(direction.x, direction.z); // Y rotation
             const horizontalDist = Math.max(0.01, Math.sqrt(direction.x**2 + direction.z**2));
-            const angleX = Math.atan2(-direction.y, horizontalDist); // Rotación X
-            const clampedAngleX = THREE.MathUtils.clamp(angleX, -Math.PI * 0.4, Math.PI * 0.4); // Limitar ángulo X
+            const angleX = Math.atan2(-direction.y, horizontalDist); // X rotation
+            const clampedAngleX = THREE.MathUtils.clamp(angleX, -Math.PI * 0.4, Math.PI * 0.4); // Limit X angle
 
             robotGroupRef.current.rotation.y = THREE.MathUtils.lerp(robotGroupRef.current.rotation.y, angleY, 0.1);
             robotGroupRef.current.rotation.x = THREE.MathUtils.lerp(robotGroupRef.current.rotation.x, clampedAngleX, 0.1);
@@ -289,9 +289,9 @@ function Robot({ onShoot }) {
         }
     });
 
-    // Función interna para manejar la lógica del disparo
+    // Internal function to handle shoot logic
     const internalHandleShoot = useCallback((overrideTarget = null) => {
-      // Determina el punto final a usar (override o estado laserEnd)
+      // Determine the end point to use (override or laserEnd state)
       const finalTarget = overrideTarget instanceof THREE.Vector3 && isFinite(overrideTarget.x)
                          ? overrideTarget
                          : (laserEnd instanceof THREE.Vector3 && isFinite(laserEnd.x) ? laserEnd.clone() : new THREE.Vector3(0, 1, -5)); // Fallback
@@ -301,55 +301,55 @@ function Robot({ onShoot }) {
         window.playLaser();
       }
     
-      // Llama a la función onShoot pasada desde Game
+      // Call the onShoot function passed from Game
       if (typeof onShoot === 'function') {
         try { onShoot(finalTarget); } catch (e) { console.error("Error calling onShoot prop:", e); }
       } else { console.warn("onShoot prop is not a function!"); }
     
-      // Activa el efecto visual del disparo
+      // Activate visual shooting effect
       setIsShooting(true);
-      setTimeout(() => setIsShooting(false), 150); // Duración del efecto visual
-    }, [onShoot, laserEnd]); // Dependencias
+      setTimeout(() => setIsShooting(false), 150); // Visual effect duration
+    }, [onShoot, laserEnd]); // Dependencies
 
-    // Listener para la tecla 'F'
+    // Listener for 'F' key
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault(); // Evitar comportamiento por defecto (ej: buscar)
-                internalHandleShoot(); // Llama SIN override (usa el estado laserEnd)
+                e.preventDefault(); // Prevent default behavior (e.g., search)
+                internalHandleShoot(); // Call WITHOUT override (uses laserEnd state)
             }
         };
         window.addEventListener('keydown', handleKeyDown);
-        // Limpieza al desmontar
+        // Cleanup when unmounting
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [internalHandleShoot]); // Dependencia correcta
+    }, [internalHandleShoot]); // Correct dependency
 
-    // Listener para el clic en la malla invisible
+    // Listener for click on invisible mesh
     const handleMeshClick = useCallback((event) => {
-        event.stopPropagation(); // Detener propagación
-        // Calcula el punto objetivo EXACTO en el momento del clic
+        event.stopPropagation(); // Stop propagation
+        // Calculate the EXACT target point at the time of click
         const clickTargetPoint = getTargetWorldPosition(pointer, camera);
-        // Llama a la lógica de disparo CON el punto calculado
+        // Call the shoot logic WITH the calculated point
         internalHandleShoot(clickTargetPoint);
-    }, [internalHandleShoot, getTargetWorldPosition, pointer, camera]); // Dependencias necesarias
+    }, [internalHandleShoot, getTargetWorldPosition, pointer, camera]); // Necessary dependencies
 
-    // Comprobación antes de renderizar
-    if (!modelLoaded && !robotModelError) return null; // Esperando modelo
+    // Check before rendering
+    if (!modelLoaded && !robotModelError) return null; // Waiting for model
     if (robotModelError) return <Text color="red">Robot Load Error</Text>; // Error
 
-    // JSX del Robot
+    // Robot JSX
     return (
         <group>
-            {/* Grupo que contiene el modelo y el helper */}
+            {/* Group containing the model and helper */}
             <group ref={robotGroupRef} />
 
-            {/* Malla invisible grande para facilitar el clic */}
+            {/* Large invisible mesh to make clicking easier */}
             <mesh position={[0, 1, 0]} onClick={handleMeshClick} visible={false}>
                 <boxGeometry args={[3, 3, 3]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide}/>
             </mesh>
 
-            {/* Componente visual del láser */}
+            {/* Visual laser component */}
             <LaserBeam start={laserStart} end={laserEnd} active={true} shooting={isShooting} />
         </group>
     );
@@ -357,138 +357,137 @@ function Robot({ onShoot }) {
 
 
 // ==========================================================================
-// === Componente Principal Game ============================================
+// === Main Game Component ============================================
 // ==========================================================================
 function Game({ onScoreChange }) {
-    // Estado del Juego
-    const [bugs, setBugs] = useState([]); // Array de bugs activos (¡Fuente de verdad!)
-    const [score, setScore] = useState(0); // Puntuación actual
-    const [level, setLevel] = useState(1); // Nivel actual
+    // Game State
+    const [bugs, setBugs] = useState([]); // Array of active bugs (Source of truth!)
+    const [score, setScore] = useState(0); // Current score
+    const [level, setLevel] = useState(1); // Current level
 
-    // --- Efectos del Ciclo de Vida y Estado ---
+    // --- Lifecycle Effects and State ---
 
-    // Generación inicial de bugs y cuando cambia el nivel
+    // Initial bug generation and when level changes
     useEffect(() => {
-        const bugCount = 5 + level * 2; // Número de bugs según el nivel
+        const bugCount = 5 + level * 2; // Number of bugs based on level
         const newBugs = Array.from({ length: bugCount }, (_, i) => ({
-            id: `${level}-${i}-${Math.random().toString(16).slice(2)}`, // ID único
+            id: `${level}-${i}-${Math.random().toString(16).slice(2)}`, // Unique ID
             position: [
-                Math.random() * 14 - 7,    // X: -7 a 7
-                Math.random() * 1 + 2.0, // Y: 0.5 a 3.0
-                -5                         // Z: Fijo en -5
+                Math.random() * 14 - 7,    // X: -7 to 7
+                Math.random() * 1 + 2.0, // Y: 0.5 to 3.0
+                -5                         // Z: Fixed at -5
             ],
-            hit: false, // Estado inicial: no golpeado
+            hit: false, // Initial state: not hit
         }));
-        console.log(`Game: Generando ${newBugs.length} bugs para nivel ${level}`);
-        setBugs(newBugs); // Establece el array de bugs en el estado
-    }, [level]); // Se ejecuta solo cuando 'level' cambia
+        console.log(`Game: Generating ${newBugs.length} bugs for level ${level}`);
+        setBugs(newBugs); // Set bug array in state
+    }, [level]); // Executes only when 'level' changes
 
-    // Notificar cambio de puntuación al componente padre (si existe)
+    // Notify score change to parent component (if exists)
     useEffect(() => {
         if (onScoreChange) {
             onScoreChange(score);
         }
-    }, [score, onScoreChange]); // Se ejecuta cuando 'score' cambia
+    }, [score, onScoreChange]); // Executes when 'score' changes
 
-    // Comprobar si el nivel está completado
-// Comprobar si el nivel está completado
-useEffect(() => {
-  // Log para depurar el estado en cada comprobación
-  console.log(`--- Level Check --- Bugs State Length: ${bugs.length}, Score: ${score}, Level: ${level}`);
+    // Check if level is completed
+    useEffect(() => {
+      // Debug log for state in each check
+      console.log(`--- Level Check --- Bugs State Length: ${bugs.length}, Score: ${score}, Level: ${level}`);
 
-  // Condición: No quedan bugs (array vacío) Y ya se ha puntuado algo
-  if (bugs.length === 0 && score > 0) {
-    console.log(`%c>>> LEVEL ${level} COMPLETE! Setting timeout for level ${level + 1}`, 'color: green; font-weight: bold;');
-    
-    // Play level complete sound if available
-    if (window.playLevelComplete) {
-      window.playLevelComplete();
-    }
-    
-    // Iniciar temporizador para pasar al siguiente nivel
-    const timerId = setTimeout(() => {
-      console.log(`%c>>> Timeout Fired! Advancing to level ${level + 1}`, 'color: blue; font-weight: bold;');
-      setLevel(prevLevel => prevLevel + 1); // Actualiza el estado del nivel
-    }, 2500); // Espera 2.5 segundos
+      // Condition: No bugs left (empty array) AND some score has been earned
+      if (bugs.length === 0 && score > 0) {
+        console.log(`%c>>> LEVEL ${level} COMPLETE! Setting timeout for level ${level + 1}`, 'color: green; font-weight: bold;');
+        
+        // Play level complete sound if available
+        if (window.playLevelComplete) {
+          window.playLevelComplete();
+        }
+        
+        // Start timer to advance to next level
+        const timerId = setTimeout(() => {
+          console.log(`%c>>> Timeout Fired! Advancing to level ${level + 1}`, 'color: blue; font-weight: bold;');
+          setLevel(prevLevel => prevLevel + 1); // Update level state
+        }, 2500); // Wait 2.5 seconds
 
-    // Función de limpieza para el temporizador
-    return () => {
-      console.log(`>>> Cleanup: Clearing level timer ${timerId} for level ${level}.`);
-      clearTimeout(timerId);
-    };
-  }
-  // Si la condición no se cumple, no se hace nada
-}, [bugs, score, level]); // Dependencias: el estado 'bugs', 'score', y 'level'
+        // Cleanup function for timer
+        return () => {
+          console.log(`>>> Cleanup: Clearing level timer ${timerId} for level ${level}.`);
+          clearTimeout(timerId);
+        };
+      }
+      // If condition is not met, do nothing
+    }, [bugs, score, level]); // Dependencies: 'bugs', 'score', and 'level' states
 
     // --- Callbacks ---
 
-    // Callback para eliminar los datos de un bug (pasado al componente Bug)
-    // ¡CORREGIDO! Usa la forma funcional de setBugs.
+    // Callback to remove bug data (passed to Bug component)
+    // FIXED! Uses functional form of setBugs.
     const handleBugRemoval = useCallback((idToRemove) => {
         setBugs(currentBugs => {
-            console.log(`>>> handleBugRemoval ID: ${idToRemove}. Bugs ANTES (en updater): ${currentBugs.length}`);
+            console.log(`>>> handleBugRemoval ID: ${idToRemove}. Bugs BEFORE (in updater): ${currentBugs.length}`);
             const nextBugs = currentBugs.filter(bug => bug.id !== idToRemove);
-            console.log(`>>> Setting bugs via handleBugRemoval. Bugs DESPUÉS (en updater): ${nextBugs.length}`);
+            console.log(`>>> Setting bugs via handleBugRemoval. Bugs AFTER (in updater): ${nextBugs.length}`);
             return nextBugs;
         });
-    }, []); // Ya no necesita dependencias porque usa la forma funcional
+    }, []); // No longer needs dependencies because it uses functional form
 
-    // Callback para manejar el disparo (pasado al componente Robot)
-    // ¡CORREGIDO! Usa la forma funcional de setBugs para marcar hits.
+    // Callback to handle shooting (passed to Robot component)
+    // FIXED! Uses functional form of setBugs to mark hits.
     const handleShoot = useCallback((targetPoint) => {
-        // Validación del punto objetivo
+        // Target point validation
         if (!(targetPoint instanceof THREE.Vector3) || !isFinite(targetPoint.x)) {
             console.error("Invalid target point received in handleShoot", targetPoint);
             return;
         }
 
-        const hitRadius = 0.5; // Radio de impacto
+        const hitRadius = 0.5; // Impact radius
         let hitOccurred = false;
-        let hitCount = 0; // Contador de cuántos se golpearon en este disparo
+        let hitCount = 0; // Counter for how many were hit in this shot
 
-        // Actualiza el estado 'bugs' usando la forma funcional
+        // Update 'bugs' state using functional form
         setBugs(currentBugs => {
             const updatedBugs = currentBugs.map(bug => {
-                // Si ya está marcado como 'hit', no lo proceses de nuevo
+                // If already marked as 'hit', don't process it again
                 if (bug.hit) return bug;
 
                 const bugPos = new THREE.Vector3(bug.position[0], bug.position[1], bug.position[2] ?? -5);
                 const distance = targetPoint.distanceTo(bugPos);
 
                 if (distance < hitRadius) {
-                    hitOccurred = true; // Marca que hubo al menos un hit
-                    hitCount++; // Incrementa el contador
-                    return { ...bug, hit: true }; // Devuelve el bug marcado como golpeado
+                    hitOccurred = true; // Mark that at least one hit occurred
+                    hitCount++; // Increment counter
+                    return { ...bug, hit: true }; // Return bug marked as hit
                 }
-                return bug; // Devuelve el bug sin cambios
+                return bug; // Return bug unchanged
             });
 
-            // Si hubo algún hit, loguea y devuelve el array actualizado
+            // If there was any hit, log and return updated array
             if (hitOccurred) {
                 console.log(`>>> handleShoot: ${hitCount} hit(s) detected. Returning updated bugs array.`);
             }
-            // Siempre devuelve el array (modificado o no)
+            // Always return array (modified or not)
             return updatedBugs;
         });
 
-        // Actualiza la puntuación DESPUÉS de la actualización de estado de bugs, si hubo hits
+        // Update score AFTER bugs state update, if there were hits
         if (hitOccurred) {
-            setScore(prevScore => prevScore + 100 * level * hitCount); // Suma puntos por cada hit
+            setScore(prevScore => prevScore + 100 * level * hitCount); // Add points for each hit
         }
 
-    }, [level]); // Depende de 'level' para la puntuación
+    }, [level]); // Depends on 'level' for scoring
 
-    // --- Renderizado del Componente Game ---
+    // --- Game Component Rendering ---
     return (
         <>
-            {/* Configuración de la Escena */}
+            {/* Scene Configuration */}
             <ambientLight intensity={0.6} />
             <directionalLight position={[5, 10, 5]} intensity={1.0} castShadow />
             <Environment preset="sunset" />
 
-            {/* Interfaz de Usuario (Texto) */}
+            {/* User Interface (Text) */}
             <Text
-                position={[0, 3.8, -3]} // Posición del texto
+                position={[0, 3.8, -3]} // Text position
                 fontSize={0.3}
                 color="#FFFFFF"
                 anchorX="center"
@@ -496,41 +495,41 @@ useEffect(() => {
                 outlineWidth={0.03}
                 outlineColor="#000000"
             >
-                {/* Muestra información actual del juego */}
+                {/* Shows current game information */}
                 {/*Level: {level} | Score: {score} | Bugs Left: {bugs.filter(b => !b.hit).length}*/}
                 {/*{'\n'}(Shoot: F / Click Robot Zone)*/}
             </Text>
 
-            {/* Robot (con Suspense para carga) */}
+            {/* Robot (with Suspense for loading) */}
             <Suspense fallback={<Text position={[0, 1, 0]} color="yellow" fontSize={0.2}>Loading Robot...</Text>}>
                 <Robot onShoot={handleShoot} />
             </Suspense>
 
-            {/* Renderizado de los Bugs */}
-            {/* Mapea directamente sobre el estado 'bugs' */}
+            {/* Bugs Rendering */}
+            {/* Map directly over 'bugs' state */}
             {bugs.map((bug, index) => (
                 <Bug
-                    key={bug.id} // Clave única para React
-                    bugData={{ ...bug, animationIndex: index }} // Pasa datos y el índice para animación
-                    onHit={handleBugRemoval} // Pasa el callback para eliminar datos
+                    key={bug.id} // Unique key for React
+                    bugData={{ ...bug, animationIndex: index }} // Pass data and index for animation
+                    onHit={handleBugRemoval} // Pass callback to remove data
                 />
             ))}
 
-            {/* Mensaje de Nivel Completado (Condicional) */}
-            {/* Se muestra si no quedan bugs y hay puntuación */}
+            {/* Level Completed Message (Conditional) */}
+            {/* Shown if no bugs left and there's a score */}
             {bugs.length === 0 && score > 0 && (
                 <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
                     <Text
-                        position={[0, 2, 0]} // Posición del mensaje -4
+                        position={[0, 2, 0]} // Message position -4
                         fontSize={0.6}
-                        color="#FFD700" // Color dorado
+                        color="#FFD700" // Gold color
                         anchorX="center"
                         anchorY="middle"
                         outlineWidth={0.05}
                         outlineColor="#000000"
-                        textAlign="center" // Centrar texto
+                        textAlign="center" // Center text
                     >
-                        {`Level ${level} Cleared!`} {/* Muestra el nivel actual completado */}
+                        {`Level ${level} Cleared!`} {/* Shows current completed level */}
                         {'\n'}Loading Next...
                     </Text>
                 </Float>
@@ -539,5 +538,5 @@ useEffect(() => {
     );
 }
 
-// Exportar el componente Game como default
+// Export Game component as default
 export default Game;
