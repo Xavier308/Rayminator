@@ -72,7 +72,7 @@ Rayminator-game
 
 1. Clone the repository
 ```
-git clone https://github.com/Xavier308/Rayminator-Game.git
+git clone https://github.com/Xavier308/Rayminator.git
 ```
 2. Install dependencies:
 ```

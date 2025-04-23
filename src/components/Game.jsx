@@ -1,4 +1,4 @@
-// src/components/Game.jsx - v4 - Complete and Corrected File
+// src/components/Game.jsx - v0.4 
 import React, { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import {
@@ -9,7 +9,7 @@ import {
     Line,
 } from '@react-three/drei';
 import * as THREE from 'three';
-import { BugExplosion } from './BugExplosion'; // Make sure the path is correct
+import { BugExplosion } from './BugExplosion';
 
 // Model URLs
 const robotModelUrl = '/models/rayminator.glb';
