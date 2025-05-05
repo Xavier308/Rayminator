@@ -82,6 +82,22 @@ npm install
 ```
 npm run dev
 ```
+## ⚠️ Compatibility Note
+
+This project **requires React 19 or higher** due to internal dependencies in:
+
+- `@react-three/fiber`
+- `@react-three/drei`
+- and internal logic relying on features from React 19's reconciler
+
+Using React 18 or lower will break the game rendering.
+
+Make sure your `package.json` includes:
+
+```json
+"react": "^19.0.0",
+"react-dom": "^19.0.0"
+```
 
 ## Project Structure
 
